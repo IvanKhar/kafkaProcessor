@@ -2,16 +2,17 @@ package ru.otr.vtb.kafkaProcessor.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonRootName;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonRootName("tuple")
 @Component
-public class TestDao {
+public class TestDao implements Serializable {
+
+    private static final long serialVersionUID = -3561142838980678679L;
 
     @JsonProperty("files")
     private List<String> files;
