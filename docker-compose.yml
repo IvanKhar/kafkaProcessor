@@ -1,0 +1,11 @@
+version: '3.2'
+
+services:
+  kafka_processor:
+    image: cr.yandex/crp6nckihbhno8i8q9iv/kafka_processor:latest
+    restart: always
+    container_name: kafka_processor
+    ports:
+      - 8090:8090
+    env_file:
+      - config.env

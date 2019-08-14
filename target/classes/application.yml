@@ -1,0 +1,19 @@
+server:
+  port: "8090"
+spring:
+  data:
+    api:
+      rootSzpUri: "localhost:8091"
+      sendEventUri: "/api/generateFile"
+  kafka:
+    consumer:
+      auto-offset-reset: latest
+      auto-commit-interval: "10000"
+    admin:
+      properties:
+        devTopic: "input_event_topic"
+        devFilePath: "/Users/ivan/projects/otr/testDir"
+        windMinDuration: "1"
+    streams:
+      application-id: "demo-app"
+    bootstrap-servers: "localhost:9092"

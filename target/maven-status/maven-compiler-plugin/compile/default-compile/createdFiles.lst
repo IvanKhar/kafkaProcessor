@@ -1,0 +1,9 @@
+ru/otr/vtb/kafkaProcessor/model/TestDao.class
+ru/otr/vtb/kafkaProcessor/service/rest/RestServiceImpl.class
+ru/otr/vtb/kafkaProcessor/KafkaProcessorApplication.class
+ru/otr/vtb/kafkaProcessor/service/rest/AbstractRestService.class
+ru/otr/vtb/kafkaProcessor/service/rest/RestService.class
+ru/otr/vtb/kafkaProcessor/ServletInitializer.class
+ru/otr/vtb/kafkaProcessor/service/kafka/KafkaEventProcessor.class
+ru/otr/vtb/kafkaProcessor/model/enums/EventToDirectories.class
+ru/otr/vtb/kafkaProcessor/config/Config.class
