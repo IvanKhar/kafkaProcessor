@@ -3,7 +3,6 @@
 /Users/ivan/projects/kafka/kafkaProcessor/src/main/java/ru/otr/vtb/kafkaProcessor/service/rest/RestService.java
 /Users/ivan/projects/kafka/kafkaProcessor/src/main/java/ru/otr/vtb/kafkaProcessor/service/rest/RestServiceImpl.java
 /Users/ivan/projects/kafka/kafkaProcessor/src/main/java/ru/otr/vtb/kafkaProcessor/model/enums/EventToDirectories.java
-/Users/ivan/projects/kafka/kafkaProcessor/src/main/java/ru/otr/vtb/kafkaProcessor/ServletInitializer.java
 /Users/ivan/projects/kafka/kafkaProcessor/src/main/java/ru/otr/vtb/kafkaProcessor/KafkaProcessorApplication.java
 /Users/ivan/projects/kafka/kafkaProcessor/src/main/java/ru/otr/vtb/kafkaProcessor/service/rest/AbstractRestService.java
 /Users/ivan/projects/kafka/kafkaProcessor/src/main/java/ru/otr/vtb/kafkaProcessor/service/kafka/KafkaEventProcessor.java

@@ -3,7 +3,7 @@ server:
 spring:
   data:
     api:
-      rootSzpUri: "localhost:8091"
+      rootSzpUri: "http://0.0.0.0:8091"
       sendEventUri: "/api/generateFile"
   kafka:
     consumer:
@@ -16,4 +16,4 @@ spring:
         windMinDuration: "1"
     streams:
       application-id: "demo-app"
-    bootstrap-servers: "localhost:9092"
+    bootstrap-servers: "http://84.201.141.214:9092"

@@ -17,5 +17,6 @@ class AbstractRestService {
                         String rootUri) {
         restTemplateBuilder.rootUri(rootUri);
         this.restTemplate = restTemplateBuilder.build();
+
     }
 }

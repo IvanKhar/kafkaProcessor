@@ -13,6 +13,7 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import ru.otr.vtb.kafkaProcessor.model.TestDao;
 import ru.otr.vtb.kafkaProcessor.model.enums.EventToDirectories;
 import ru.otr.vtb.kafkaProcessor.service.rest.RestService;
@@ -81,14 +82,11 @@ public class KafkaEventProcessor {
         inputEventTopicStream
                 .peek((k, v) -> System.out.println(String.join(" ","Stream got record", "time:", LocalDateTime.now().format(DateTimeFormatter.ISO_TIME))))
                 .groupByKey(Grouped.with(Serdes.String(), Serdes.String()))
-                .windowedBy(TimeWindows.of(Duration.ofMinutes(1)).grace(Duration.ofSeconds(Long.parseLong(windMinDuration))).advanceBy(Duration.ofMinutes(Long.parseLong(windMinDuration))))
-                .aggregate((Initializer<ArrayList<String>>) ArrayList::new, (aggKey, newValue, aggValue) -> {
-                    aggValue.add(newValue);
-                    return aggValue;
-                })
+                .windowedBy(TimeWindows.of(Duration.ofMinutes(Long.parseLong(windMinDuration))).grace(Duration.ofSeconds(5)).advanceBy(Duration.ofMinutes(Long.parseLong(windMinDuration))))
+                .aggregate(String::new, (aggKey, newValue, aggValue) -> aggValue + "," + newValue)
                 .suppress(Suppressed.untilWindowCloses(maxRecords(70).withNoBound()))
                 .toStream()
-                .foreach((k, v) -> sendEvent(v));
+                .foreach((k, v) -> sendEvent(StringUtils.commaDelimitedListToSet(v)));
 
 
         Topology topology = builder.build();
@@ -98,8 +96,11 @@ public class KafkaEventProcessor {
         streams.start();
     }
 
-    private void sendEvent(List<String> files) {
+    private void sendEvent(Set<String> files) {
         try {
+            String filelist = "";
+            for (String file : files) filelist = filelist.concat(file) + "\n";
+            System.out.println("sending records \n" + filelist);
             restService.sendEvent(new TestDao(files));
         } catch (Exception e) {
             logger.error(e.getMessage());
