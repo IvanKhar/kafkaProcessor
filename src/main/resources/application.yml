@@ -12,8 +12,9 @@ spring:
     admin:
       properties:
         devTopic: "input_event_topic"
-        devFilePath: "/Users/ivan/projects/otr/testDir"
+        devOutTopic: "output_event_topic"
+        devFilePath: "/container/testDir"
         windMinDuration: "1"
     streams:
       application-id: "demo-app"
-    bootstrap-servers: "http://84.201.141.214:9092"
+    bootstrap-servers: "http://kafkahost:9092"

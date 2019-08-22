@@ -45,6 +45,7 @@ public class KafkaEventProcessor {
     @Autowired
     KafkaEventProcessor(@Value("${spring.kafka.admin.properties.devFilePath}") String filesPath,
                         @Value("${spring.kafka.admin.properties.devTopic}") String devTopic,
+                        @Value("${spring.kafka.admin.properties.devOutTopic}") String devOutTopic,
                         @Value("${spring.kafka.admin.properties.windMinDuration}") String windMinDuration,
                         @Value("${spring.kafka.streams.application-id}") String applicationId,
                         @Value("${spring.kafka.bootstrap-servers}") String bootstrapServer,
@@ -78,6 +79,7 @@ public class KafkaEventProcessor {
 
 
         KStream<String,String> inputEventTopicStream = builder.stream(devTopic, Consumed.with(Serdes.String(), Serdes.String()));
+        KStream<String,String> outputEventTopicStream = builder.stream(devOutTopic, Consumed.with(Serdes.String(), Serdes.String()));
 
         inputEventTopicStream
                 .peek((k, v) -> System.out.println(String.join(" ","Stream got record", "time:", LocalDateTime.now().format(DateTimeFormatter.ISO_TIME))))
@@ -86,8 +88,9 @@ public class KafkaEventProcessor {
                 .aggregate(String::new, (aggKey, newValue, aggValue) -> aggValue + "," + newValue)
                 .suppress(Suppressed.untilWindowCloses(maxRecords(70).withNoBound()))
                 .toStream()
-                .foreach((k, v) -> sendEvent(StringUtils.commaDelimitedListToSet(v)));
+                .to(devOutTopic);
 
+        outputEventTopicStream.foreach((key, value) -> sendEvent(StringUtils.commaDelimitedListToSet(value)));
 
         Topology topology = builder.build();
 
@@ -140,6 +143,7 @@ public class KafkaEventProcessor {
             }
             for (WatchEvent event : key.pollEvents()) {
                 String path = event.context().toString();
+                System.out.println(path);
                 eventKafkaTemplate.send(devTopic, 0, getEventCode(path), path);
             }
             key.reset();

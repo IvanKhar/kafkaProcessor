@@ -1,10 +1,12 @@
-version: '3.2'
+version: '3.7'
 
 services:
   kafka_processor:
     image: cr.yandex/crp6nckihbhno8i8q9iv/kafka_processor:latest
     restart: always
     container_name: kafka_processor
+    volumes:
+      - /Users/ivan/projects/otr:/container
     ports:
       - 8090:8090
     env_file:
