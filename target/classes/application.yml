@@ -12,6 +12,7 @@ spring:
     admin:
       properties:
         devTopic: "input_event_topic"
+        devOutTopic: "output_event_topic"
         devFilePath: "/container/testDir"
         windMinDuration: "1"
     streams:

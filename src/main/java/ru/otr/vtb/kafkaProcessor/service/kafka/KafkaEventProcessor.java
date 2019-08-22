@@ -88,6 +88,7 @@ public class KafkaEventProcessor {
                 .aggregate(String::new, (aggKey, newValue, aggValue) -> aggValue + "," + newValue)
                 .suppress(Suppressed.untilWindowCloses(maxRecords(70).withNoBound()))
                 .toStream()
+                .map((key, value) -> KeyValue.pair(key.key(), value))
                 .to(devOutTopic);
 
         outputEventTopicStream.foreach((key, value) -> sendEvent(StringUtils.commaDelimitedListToSet(value)));
@@ -142,9 +143,9 @@ public class KafkaEventProcessor {
                 return;
             }
             for (WatchEvent event : key.pollEvents()) {
-                String path = event.context().toString();
+                Path path = Paths.get(event.context().toString());
                 System.out.println(path);
-                eventKafkaTemplate.send(devTopic, 0, getEventCode(path), path);
+                eventKafkaTemplate.send(devTopic, 0, path.getRoot().toString(), path.getFileName().toString());
             }
             key.reset();
         }
