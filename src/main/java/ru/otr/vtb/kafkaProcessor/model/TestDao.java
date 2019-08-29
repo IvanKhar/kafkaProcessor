@@ -10,7 +10,7 @@ public class TestDao implements Serializable {
 
     private static final long serialVersionUID = -3561142838980678679L;
 
-    private String catalogName;
+    private String name;
 
     private String eventType;
 
@@ -24,20 +24,20 @@ public class TestDao implements Serializable {
     }
 
     @JsonCreator
-    public TestDao(@JsonProperty("catalogName") String catalogName,
+    public TestDao(@JsonProperty("name") String name,
                    @JsonProperty("eventType") String eventType,
                    @JsonProperty("fileList") FileList fileList) {
-        this.catalogName = catalogName;
+        this.name = name;
         this.eventType = eventType;
         this.fileList = fileList;
     }
 
-    public String getCatalogName() {
-        return catalogName;
+    public String getName() {
+        return name;
     }
 
-    public void setCatalogName(String catalogName) {
-        this.catalogName = catalogName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEventType() {
@@ -50,7 +50,7 @@ public class TestDao implements Serializable {
 
     public FileList getFileList() {
         if (fileList == null) {
-            return new FileList();
+            fileList = new FileList();
         }
         return fileList;
     }
@@ -60,14 +60,14 @@ public class TestDao implements Serializable {
     }
 
     public TestDao addFile(File file) {
-        this.getFileList().getFiles().add(file);
+        this.getFileList().getFile().add(file);
         return this;
     }
 
     public TestDao fullFillMetaInfoByFileList(String directory, String eventType) {
-        this.setCatalogName(directory);
+        this.setName(directory);
         this.setEventType(eventType);
-        this.getFileList().setSize(this.getFileList().getFiles().size());
+        this.getFileList().setSize(this.getFileList().getFile().size());
         return this;
     }
 
@@ -76,20 +76,20 @@ public class TestDao implements Serializable {
         if (this == o) return true;
         if (!(o instanceof TestDao)) return false;
         TestDao testDao = (TestDao) o;
-        return getCatalogName().equals(testDao.getCatalogName()) &&
+        return getName().equals(testDao.getName()) &&
                 getEventType().equals(testDao.getEventType()) &&
                 Objects.equals(getFileList(), testDao.getFileList());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getCatalogName(), getEventType(), getFileList());
+        return Objects.hash(getName(), getEventType(), getFileList());
     }
 
     @Override
     public String toString() {
         return "TestDao{" +
-                "catalogName='" + catalogName + '\'' +
+                "name='" + name + '\'' +
                 ", eventType='" + eventType + '\'' +
                 ", fileList=" + fileList +
                 '}';

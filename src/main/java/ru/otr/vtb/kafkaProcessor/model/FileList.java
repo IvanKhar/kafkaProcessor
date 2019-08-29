@@ -13,15 +13,15 @@ public class FileList implements Serializable {
 
     private Integer size;
 
-    private List<File> files;
+    private List<File> file;
 
     public FileList() {
     }
 
     public FileList(@JsonProperty("size") Integer size,
-                    @JsonProperty("files") List<File> files) {
+                    @JsonProperty("file") List<File> file) {
         this.size = size;
-        this.files = files;
+        this.file = file;
     }
 
     public Integer getSize() {
@@ -32,16 +32,16 @@ public class FileList implements Serializable {
         this.size = size;
     }
 
-    public List<File> getFiles() {
-        if (files == null) {
-            files = new ArrayList<>();
-            return files;
+    public List<File> getFile() {
+        if (file == null) {
+            file = new ArrayList<>();
+            return file;
         }
-        return files;
+        return file;
     }
 
-    public void setFiles(List<File> files) {
-        this.files = files;
+    public void setFile(List<File> file) {
+        this.file = file;
     }
 
     @Override
@@ -50,19 +50,19 @@ public class FileList implements Serializable {
         if (!(o instanceof FileList)) return false;
         FileList fileList = (FileList) o;
         return getSize().equals(fileList.getSize()) &&
-                getFiles().equals(fileList.getFiles());
+                getFile().equals(fileList.getFile());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSize(), getFiles());
+        return Objects.hash(getSize(), getFile());
     }
 
     @Override
     public String toString() {
         return "FileList{" +
                 "size=" + size +
-                ", files=" + files +
+                ", file=" + file +
                 '}';
     }
 }
