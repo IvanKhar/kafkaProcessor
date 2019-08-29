@@ -13,7 +13,7 @@ public class File implements Serializable {
 
     private String directory;
 
-    private String fileName;
+    private String filename;
 
     private String lastModifiedTime;
 
@@ -26,12 +26,12 @@ public class File implements Serializable {
 
     @JsonCreator
     public File(@JsonProperty("directory") String directory,
-                @JsonProperty("fileName") String fileName,
+                @JsonProperty("filename") String filename,
                 @JsonProperty("lastModifiedTime") String lastModifiedTime,
                 @JsonProperty("creationTime") String creationTime,
                 @JsonProperty("size") Long size) {
         this.directory = directory;
-        this.fileName = fileName;
+        this.filename = filename;
         this.lastModifiedTime = lastModifiedTime;
         this.creationTime = creationTime;
         this.size = size;
@@ -45,12 +45,12 @@ public class File implements Serializable {
         this.directory = directory;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getFilename() {
+        return filename;
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setFilename(String filename) {
+        this.filename = filename;
     }
 
     public String getLastModifiedTime() {
@@ -84,21 +84,21 @@ public class File implements Serializable {
         File file = (File) o;
         return getSize().equals(file.getSize()) &&
                 getDirectory().equals(file.getDirectory()) &&
-                getFileName().equals(file.getFileName()) &&
+                getFilename().equals(file.getFilename()) &&
                 Objects.equals(getLastModifiedTime(), file.getLastModifiedTime()) &&
                 Objects.equals(getCreationTime(), file.getCreationTime());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDirectory(), getFileName(), getLastModifiedTime(), getCreationTime(), getSize());
+        return Objects.hash(getDirectory(), getFilename(), getLastModifiedTime(), getCreationTime(), getSize());
     }
 
     @Override
     public String toString() {
         return "File{" +
                 "directory='" + directory + '\'' +
-                ", fileName='" + fileName + '\'' +
+                ", filename='" + filename + '\'' +
                 ", lastModifiedTime='" + lastModifiedTime + '\'' +
                 ", creationTime='" + creationTime + '\'' +
                 ", size=" + size +

@@ -8,7 +8,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
-import ru.otr.vtb.kafkaProcessor.model.TestDao;
+import ru.otr.vtb.kafkaProcessor.model.FileEvent;
 
 import java.net.URI;
 
@@ -27,12 +27,12 @@ public class RestServiceImpl extends AbstractRestService implements RestService 
     }
 
     @Override
-    public void sendEvent(TestDao message) throws Exception {
+    public void sendEvent(FileEvent fileEvent) throws Exception {
 
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON_UTF8);
-            HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(message), headers);
+            HttpEntity<String> request = new HttpEntity<>(mapper.writeValueAsString(fileEvent), headers);
             restTemplate.postForLocation(sendEventUri, request);
         } catch (RestClientException e) {
             log.error("Error while calling importFromQueueMessageFiles REST service", e);

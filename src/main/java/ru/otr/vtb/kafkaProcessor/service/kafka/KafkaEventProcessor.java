@@ -13,7 +13,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.stereotype.Service;
 import ru.otr.vtb.kafkaProcessor.model.File;
-import ru.otr.vtb.kafkaProcessor.model.TestDao;
+import ru.otr.vtb.kafkaProcessor.model.FileEvent;
 import ru.otr.vtb.kafkaProcessor.model.enums.EventToDirectories;
 import ru.otr.vtb.kafkaProcessor.service.rest.RestService;
 
@@ -73,10 +73,7 @@ public class KafkaEventProcessor {
         EVENT_PRODUCER_PROPERTIES_MAP.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, new JsonPOJOSerializer<File>().getClass());
 
         ProducerFactory<String, File> eventProducerFactory = new DefaultKafkaProducerFactory<>(EVENT_PRODUCER_PROPERTIES_MAP);
-
         this.eventKafkaTemplate = new KafkaTemplate<>(eventProducerFactory);
-
-//        new Thread(this::monitorForFiles).start();
     }
 
 
@@ -97,15 +94,15 @@ public class KafkaEventProcessor {
 
         Map<String, Object> testDaoSerdeProps = new HashMap<>();
 
-        final Serializer<TestDao> testDaoSerializer = new JsonPOJOSerializer<>();
-        testDaoSerdeProps.put("JsonPOJOClass", TestDao.class);
+        final Serializer<FileEvent> testDaoSerializer = new JsonPOJOSerializer<>();
+        testDaoSerdeProps.put("JsonPOJOClass", FileEvent.class);
         testDaoSerializer.configure(testDaoSerdeProps, false);
 
-        final Deserializer<TestDao> testDaoDeserializer = new JsonPOJODeserializer<>();
-        testDaoSerdeProps.put("JsonPOJOClass", TestDao.class);
+        final Deserializer<FileEvent> testDaoDeserializer = new JsonPOJODeserializer<>();
+        testDaoSerdeProps.put("JsonPOJOClass", FileEvent.class);
         testDaoDeserializer.configure(testDaoSerdeProps, false);
 
-        final Serde<TestDao> testDaoSerde = Serdes.serdeFrom(testDaoSerializer, testDaoDeserializer);
+        final Serde<FileEvent> testDaoSerde = Serdes.serdeFrom(testDaoSerializer, testDaoDeserializer);
 
         StreamsBuilder fileEventStreamBuilder = new StreamsBuilder();
 
@@ -115,7 +112,7 @@ public class KafkaEventProcessor {
                 .groupByKey(Grouped.with(Serdes.String(), fileSerde))
                 .windowedBy(TimeWindows.of(Duration.ofMinutes(Long.parseLong(windMinDuration))).grace(Duration.ofSeconds(5)).advanceBy(Duration.ofMinutes(Long.parseLong(windMinDuration))))
                 .aggregate(
-                        TestDao::new,
+                        FileEvent::new,
                         (aggKey, newValue, aggValue) -> aggValue.addFile(newValue),
                         Materialized.with(Serdes.String(), testDaoSerde))
                 .suppress(Suppressed.untilWindowCloses(unbounded()))
@@ -123,7 +120,7 @@ public class KafkaEventProcessor {
                 .map((key, value) -> KeyValue.pair(key.key(), value.fullFillMetaInfoByFileList(key.key(), getEventCode(key.key()))))
                 .to(devOutTopic, Produced.with(Serdes.String(), testDaoSerde));
 
-        KStream<String, TestDao> outputEventTopicStream = fileEventStreamBuilder.stream(devOutTopic, Consumed.with(Serdes.String(), testDaoSerde));
+        KStream<String, FileEvent> outputEventTopicStream = fileEventStreamBuilder.stream(devOutTopic, Consumed.with(Serdes.String(), testDaoSerde));
         outputEventTopicStream.foreach((key, value) -> sendEvent(value));
 
 
@@ -135,10 +132,10 @@ public class KafkaEventProcessor {
 
     }
 
-    private void sendEvent(TestDao files) {
+    private void sendEvent(FileEvent fileEvent) {
         try {
-            System.out.println("Sending new record" + files.toString());
-            restService.sendEvent(files);
+            System.out.println("Sending new record" + fileEvent.toString());
+            restService.sendEvent(fileEvent);
         } catch (Exception e) {
             logger.error(e.getMessage());
         }
@@ -152,7 +149,6 @@ public class KafkaEventProcessor {
                 .findFirst()
                 .map(EventToDirectories::getEventCode)
                 .orElse("none");
-
     }
 
     @PostConstruct
@@ -166,7 +162,6 @@ public class KafkaEventProcessor {
             e.printStackTrace();
             return;
         }
-
 
         while (true) {
             WatchKey key;
