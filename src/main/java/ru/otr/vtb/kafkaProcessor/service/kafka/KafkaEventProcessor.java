@@ -76,33 +76,11 @@ public class KafkaEventProcessor {
         this.eventKafkaTemplate = new KafkaTemplate<>(eventProducerFactory);
     }
 
-
     @PostConstruct
     public void initializeStreams() {
 
-        Map<String, Object> fileSerdeProps = new HashMap<>();
-
-        final Serializer<File> fileSerializer = new JsonPOJOSerializer<>();
-        fileSerdeProps.put("JsonPOJOClass", File.class);
-        fileSerializer.configure(fileSerdeProps, false);
-
-        final Deserializer<File> fileDeserializer = new JsonPOJODeserializer<>();
-        fileSerdeProps.put("JsonPOJOClass", File.class);
-        fileDeserializer.configure(fileSerdeProps, false);
-
-        final Serde<File> fileSerde = Serdes.serdeFrom(fileSerializer, fileDeserializer);
-
-        Map<String, Object> testDaoSerdeProps = new HashMap<>();
-
-        final Serializer<FileEvent> testDaoSerializer = new JsonPOJOSerializer<>();
-        testDaoSerdeProps.put("JsonPOJOClass", FileEvent.class);
-        testDaoSerializer.configure(testDaoSerdeProps, false);
-
-        final Deserializer<FileEvent> testDaoDeserializer = new JsonPOJODeserializer<>();
-        testDaoSerdeProps.put("JsonPOJOClass", FileEvent.class);
-        testDaoDeserializer.configure(testDaoSerdeProps, false);
-
-        final Serde<FileEvent> testDaoSerde = Serdes.serdeFrom(testDaoSerializer, testDaoDeserializer);
+        final Serde<File> fileSerde = getValueSerde(File.class);
+        final Serde<FileEvent> testDaoSerde = getValueSerde(FileEvent.class);
 
         StreamsBuilder fileEventStreamBuilder = new StreamsBuilder();
 
@@ -123,32 +101,9 @@ public class KafkaEventProcessor {
         KStream<String, FileEvent> outputEventTopicStream = fileEventStreamBuilder.stream(devOutTopic, Consumed.with(Serdes.String(), testDaoSerde));
         outputEventTopicStream.foreach((key, value) -> sendEvent(value));
 
-
         Topology inputTopology = fileEventStreamBuilder.build();
-
         KafkaStreams eventStreams = new KafkaStreams(inputTopology, FILE_EVENT_STREAM_PROPERTIES);
-
         eventStreams.start();
-
-    }
-
-    private void sendEvent(FileEvent fileEvent) {
-        try {
-            System.out.println("Sending new record" + fileEvent.toString());
-            restService.sendEvent(fileEvent);
-        } catch (Exception e) {
-            logger.error(e.getMessage());
-        }
-    }
-
-
-    private String getEventCode(String filePath) {
-
-        return EnumSet.allOf(EventToDirectories.class).stream()
-                .filter(en -> filePath.contains(en.getFilePath()))
-                .findFirst()
-                .map(EventToDirectories::getEventCode)
-                .orElse("none");
     }
 
     @PostConstruct
@@ -191,5 +146,39 @@ public class KafkaEventProcessor {
             }
             key.reset();
         }
+    }
+
+    private void sendEvent(FileEvent fileEvent) {
+        try {
+            System.out.println("Sending new record" + fileEvent.toString());
+            restService.sendEvent(fileEvent);
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
+    }
+
+
+    private String getEventCode(String filePath) {
+
+        return EnumSet.allOf(EventToDirectories.class).stream()
+                .filter(en -> filePath.contains(en.getFilePath()))
+                .findFirst()
+                .map(EventToDirectories::getEventCode)
+                .orElse("none");
+    }
+
+
+    private <T> Serde<T> getValueSerde(Class<T> clazz) {
+        Map<String, Object> fileSerdeProps = new HashMap<>();
+
+        final Serializer<T> fileSerializer = new JsonPOJOSerializer<>();
+        fileSerdeProps.put("JsonPOJOClass", clazz);
+        fileSerializer.configure(fileSerdeProps, false);
+
+        final Deserializer<T> fileDeserializer = new JsonPOJODeserializer<>();
+        fileSerdeProps.put("JsonPOJOClass", clazz);
+        fileDeserializer.configure(fileSerdeProps, false);
+
+        return Serdes.serdeFrom(fileSerializer, fileDeserializer);
     }
 }
