@@ -93,4 +93,15 @@ public class File implements Serializable {
     public int hashCode() {
         return Objects.hash(getDirectory(), getFileName(), getLastModifiedTime(), getCreationTime(), getSize());
     }
+
+    @Override
+    public String toString() {
+        return "File{" +
+                "directory='" + directory + '\'' +
+                ", fileName='" + fileName + '\'' +
+                ", lastModifiedTime='" + lastModifiedTime + '\'' +
+                ", creationTime='" + creationTime + '\'' +
+                ", size=" + size +
+                '}';
+    }
 }

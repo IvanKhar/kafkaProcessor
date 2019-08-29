@@ -1,7 +1,6 @@
 package ru.otr.vtb.kafkaProcessor.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.util.CollectionUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -34,8 +33,9 @@ public class FileList implements Serializable {
     }
 
     public List<File> getFiles() {
-        if (CollectionUtils.isEmpty(files)) {
-            return new ArrayList<>();
+        if (files == null) {
+            files = new ArrayList<>();
+            return files;
         }
         return files;
     }
@@ -56,5 +56,13 @@ public class FileList implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(getSize(), getFiles());
+    }
+
+    @Override
+    public String toString() {
+        return "FileList{" +
+                "size=" + size +
+                ", files=" + files +
+                '}';
     }
 }

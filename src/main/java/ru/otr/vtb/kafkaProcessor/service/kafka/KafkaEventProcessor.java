@@ -1,6 +1,5 @@
 package ru.otr.vtb.kafkaProcessor.service.kafka;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.*;
 import org.apache.kafka.streams.*;
@@ -18,6 +17,7 @@ import ru.otr.vtb.kafkaProcessor.model.TestDao;
 import ru.otr.vtb.kafkaProcessor.model.enums.EventToDirectories;
 import ru.otr.vtb.kafkaProcessor.service.rest.RestService;
 
+import javax.annotation.PostConstruct;
 import java.nio.file.*;
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.apache.kafka.streams.kstream.Suppressed.BufferConfig.maxRecords;
+import static org.apache.kafka.streams.kstream.Suppressed.BufferConfig.unbounded;
 
 @Service
 public class KafkaEventProcessor {
@@ -37,12 +37,12 @@ public class KafkaEventProcessor {
     final private static Properties FILE_EVENT_STREAM_PROPERTIES = new Properties();
     final private static Map<String, Object> EVENT_PRODUCER_PROPERTIES_MAP = new HashMap<>();
 
-    final private static Map<String, Object> TESTEVENT_PRODUCER_PROPERTIES_MAP = new HashMap<>();
-
     private final KafkaTemplate<String, File> eventKafkaTemplate;
 
     private final String filesPath;
     private final String devTopic;
+    private final String devOutTopic;
+    private final String windMinDuration;
 
     private RestService restService;
 
@@ -61,6 +61,8 @@ public class KafkaEventProcessor {
 
         this.filesPath = filesPath;
         this.devTopic = devTopic;
+        this.devOutTopic = devOutTopic;
+        this.windMinDuration = windMinDuration;
 
         FILE_EVENT_STREAM_PROPERTIES.put(StreamsConfig.APPLICATION_ID_CONFIG, applicationId);
         FILE_EVENT_STREAM_PROPERTIES.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServer);
@@ -70,13 +72,16 @@ public class KafkaEventProcessor {
         EVENT_PRODUCER_PROPERTIES_MAP.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         EVENT_PRODUCER_PROPERTIES_MAP.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, new JsonPOJOSerializer<File>().getClass());
 
-        new ObjectMapper();
-
         ProducerFactory<String, File> eventProducerFactory = new DefaultKafkaProducerFactory<>(EVENT_PRODUCER_PROPERTIES_MAP);
 
         this.eventKafkaTemplate = new KafkaTemplate<>(eventProducerFactory);
 
-        new Thread(this::monitorForFiles).start();
+//        new Thread(this::monitorForFiles).start();
+    }
+
+
+    @PostConstruct
+    public void initializeStreams() {
 
         Map<String, Object> fileSerdeProps = new HashMap<>();
 
@@ -109,8 +114,11 @@ public class KafkaEventProcessor {
                 .peek((fileDir, file) -> System.out.println(String.join(" ", "Stream got record", "time:", LocalDateTime.now().format(DateTimeFormatter.ISO_TIME))))
                 .groupByKey(Grouped.with(Serdes.String(), fileSerde))
                 .windowedBy(TimeWindows.of(Duration.ofMinutes(Long.parseLong(windMinDuration))).grace(Duration.ofSeconds(5)).advanceBy(Duration.ofMinutes(Long.parseLong(windMinDuration))))
-                .aggregate(TestDao::new, (aggKey, newValue, aggValue) -> aggValue.addFile(newValue), Materialized.with(Serdes.String(), testDaoSerde))
-                .suppress(Suppressed.untilWindowCloses(maxRecords(70).withNoBound()))
+                .aggregate(
+                        TestDao::new,
+                        (aggKey, newValue, aggValue) -> aggValue.addFile(newValue),
+                        Materialized.with(Serdes.String(), testDaoSerde))
+                .suppress(Suppressed.untilWindowCloses(unbounded()))
                 .toStream()
                 .map((key, value) -> KeyValue.pair(key.key(), value.fullFillMetaInfoByFileList(key.key(), getEventCode(key.key()))))
                 .to(devOutTopic, Produced.with(Serdes.String(), testDaoSerde));
@@ -124,6 +132,7 @@ public class KafkaEventProcessor {
         KafkaStreams eventStreams = new KafkaStreams(inputTopology, FILE_EVENT_STREAM_PROPERTIES);
 
         eventStreams.start();
+
     }
 
     private void sendEvent(TestDao files) {
@@ -146,6 +155,7 @@ public class KafkaEventProcessor {
 
     }
 
+    @PostConstruct
     private void monitorForFiles() {
         Path filePath = Paths.get(filesPath);
         WatchService watchService;
