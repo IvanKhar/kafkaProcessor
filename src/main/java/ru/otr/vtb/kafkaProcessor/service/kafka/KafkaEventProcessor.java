@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
-import static org.apache.kafka.streams.kstream.Suppressed.BufferConfig.unbounded;
+import static org.apache.kafka.streams.kstream.Suppressed.BufferConfig.maxRecords;
 
 @Service
 public class KafkaEventProcessor {
@@ -88,12 +88,12 @@ public class KafkaEventProcessor {
         inputEventTopicStream
                 .peek((fileDir, file) -> System.out.println(String.join(" ", "Stream got record", "time:", LocalDateTime.now().format(DateTimeFormatter.ISO_TIME))))
                 .groupByKey(Grouped.with(Serdes.String(), fileSerde))
-                .windowedBy(TimeWindows.of(Duration.ofMinutes(Long.parseLong(windMinDuration))).grace(Duration.ofSeconds(5)).advanceBy(Duration.ofMinutes(Long.parseLong(windMinDuration))))
+                .windowedBy(TimeWindows.of(Duration.ofMinutes(Long.parseLong(windMinDuration))).grace(Duration.ofMinutes(Long.parseLong(windMinDuration))))
                 .aggregate(
                         FileEvent::new,
                         (aggKey, newValue, aggValue) -> aggValue.addFile(newValue),
                         Materialized.with(Serdes.String(), testDaoSerde))
-                .suppress(Suppressed.untilWindowCloses(unbounded()))
+                .suppress(Suppressed.untilWindowCloses(maxRecords(10).withNoBound()))
                 .toStream()
                 .map((key, value) -> KeyValue.pair(key.key(), value.fullFillMetaInfoByFileList(key.key(), getEventCode(key.key()))))
                 .to(devOutTopic, Produced.with(Serdes.String(), testDaoSerde));
